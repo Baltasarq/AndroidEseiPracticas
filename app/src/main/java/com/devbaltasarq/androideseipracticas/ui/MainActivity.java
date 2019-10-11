@@ -12,6 +12,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.devbaltasarq.androideseipracticas.R;
 import com.devbaltasarq.androideseipracticas.core.Practica;
@@ -73,6 +74,10 @@ public class MainActivity extends AppCompatActivity {
                     MainActivity.this.adaptador.add(
                             new Practica( partes[ 0 ], partes[ 1 ] )
                     );
+                } else {
+                    Toast.makeText( MainActivity.this,
+                            "Error: siga el formato:\n <asignatura>: <trabajo>",
+                                 Toast.LENGTH_LONG ).show();
                 }
 
                 MainActivity.this.muestraEstado();
