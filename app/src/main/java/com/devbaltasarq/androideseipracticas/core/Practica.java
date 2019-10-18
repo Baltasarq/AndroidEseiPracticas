@@ -3,7 +3,7 @@ package com.devbaltasarq.androideseipracticas.core;
 public class Practica {
     public Practica(String asignatura, String trabajo) {
         this.asignatura = asignatura.trim().toUpperCase();
-        this.trabajo = trabajo.trim();
+        this.trabajo = trabajo.trim().replace( ':', ';' );
     }
 
     public String getAsignatura() {
