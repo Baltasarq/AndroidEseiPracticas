@@ -18,7 +18,7 @@
         android:layout_height="wrap_content">
 
         <Button android:id="@+id/btInserta"
-            android:text="+"
+            android:text="@string/lbl_inserta"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 

@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">AndroidEseiPracticas</string>
+    <string name="lbl_inserta">Inserta</string>
+    <string name="lbl_borra">Borra</string>
 </resources>

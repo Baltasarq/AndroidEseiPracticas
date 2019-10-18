@@ -1,10 +1,15 @@
 package com.devbaltasarq.androideseipracticas.ui;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.ContextMenu;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -18,11 +23,14 @@ import com.devbaltasarq.androideseipracticas.R;
 import com.devbaltasarq.androideseipracticas.core.Practica;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -46,16 +54,105 @@ public class MainActivity extends AppCompatActivity {
 
         LV_PRACTICAS.setAdapter( this.adaptador );
 
-        LV_PRACTICAS.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+        /*LV_PRACTICAS.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
                 MainActivity.this.borrarNum( i );
                 return true;
             }
-        });
+        });*/
+        this.registerForContextMenu( LV_PRACTICAS );
 
         // Actualiza la vista
         this.muestraEstado();
+    }
+
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+
+        final SharedPreferences PREFS = this.getSharedPreferences( "prefs", MODE_PRIVATE );
+        final Set<String> PRACTICAS = PREFS.getStringSet( "practicas", new HashSet<String>() );
+
+        this.practicas.clear();
+        for(String strPractica: PRACTICAS) {
+            String[] partesPractica = strPractica.split( ":" );
+
+            if ( partesPractica.length > 1 ) {
+                this.practicas.add(
+                        new Practica(
+                                partesPractica[ 0 ],
+                                partesPractica[ 1 ] )
+                );
+            }
+        }
+
+        return;
+    }
+
+    @Override
+    public void onPause()
+    {
+        super.onPause();
+
+        final SharedPreferences.Editor PREFS = this.getSharedPreferences( "prefs", MODE_PRIVATE ).edit();
+
+        // Crear conjunto de trabajos
+        Set<String> practicas = new HashSet<>();
+
+        for(Practica p: this.practicas) {
+            practicas.add( p.toString() );
+        }
+
+        PREFS.putStringSet( "practicas", practicas );
+        PREFS.apply();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
+        this.getMenuInflater().inflate( R.menu.menu_ppal, menu );
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item)
+    {
+        boolean toret = false;
+
+        switch( item.getItemId() ) {
+            case R.id.opInserta:
+                this.inserta();
+                break;
+        }
+
+        return toret;
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo)
+    {
+        if ( v.getId() == R.id.lvPracticas ) {
+            this.getMenuInflater().inflate( R.menu.menu_ctx, menu );
+        }
+    }
+
+    @Override
+    public boolean onContextItemSelected(@NonNull MenuItem item)
+    {
+        boolean toret = false;
+
+        switch( item.getItemId() ) {
+            case R.id.opBorra:
+                int pos = ( (AdapterView.AdapterContextMenuInfo)
+                        item.getMenuInfo() ).position;
+                this.borraNum( pos );
+                break;
+        }
+
+        return toret;
     }
 
     private void inserta()
@@ -87,7 +184,7 @@ public class MainActivity extends AppCompatActivity {
         dlg.show();
     }
 
-    private void borrarNum(int pos)
+    private void borraNum(int pos)
     {
         this.practicas.remove( pos );
         this.adaptador.notifyDataSetChanged();
