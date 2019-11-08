@@ -2,4 +2,7 @@
     <string name="app_name">AndroidEseiPracticas</string>
     <string name="lbl_inserta">Inserta</string>
     <string name="lbl_borra">Borra</string>
+    <string name="lbl_cancela">Cancela</string>
+    <string name="lbl_asignatura">Asignatura</string>
+    <string name="lbl_trabajo">Trabajo</string>
 </resources>

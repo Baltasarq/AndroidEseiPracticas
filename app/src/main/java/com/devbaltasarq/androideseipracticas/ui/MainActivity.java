@@ -1,10 +1,13 @@
 package com.devbaltasarq.androideseipracticas.ui;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
@@ -28,6 +31,7 @@ import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
     private static String LOG_TAG = MainActivity.class.getSimpleName();
+    private static int RC_NUEVA_PRACTICA = 11;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -55,13 +59,18 @@ public class MainActivity extends AppCompatActivity {
 
         LV_PRACTICAS.setAdapter( this.adaptador );
 
-        /*LV_PRACTICAS.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+        /*
+        // Usado cuando se borraba un elemento mediante el pulsado largo.
+
+        LV_PRACTICAS.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
                 MainActivity.this.borrarNum( i );
                 return true;
             }
-        });*/
+        });
+        */
+
         this.registerForContextMenu( LV_PRACTICAS );
 
         // Actualiza la vista
@@ -159,7 +168,31 @@ public class MainActivity extends AppCompatActivity {
         return toret;
     }
 
-    private void inserta()
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data)
+    {
+        if ( requestCode == RC_NUEVA_PRACTICA
+          && resultCode == Activity.RESULT_OK )
+        {
+            final Practica PRACTICA_NUEVA =
+                    new Practica(
+                            data.getExtras().getString( "asignatura" ),
+                            data.getExtras().getString( "trabajo" ) );
+
+            final SharedPreferences PREFS = this.getSharedPreferences( "prefs", MODE_PRIVATE );
+            final SharedPreferences.Editor EDIT_PREFS = this.getSharedPreferences( "prefs", MODE_PRIVATE ).edit();
+            final Set<String> PRACTICAS = PREFS.getStringSet( "practicas", new HashSet<String>() );
+
+            PRACTICAS.add( PRACTICA_NUEVA.toString() );
+            EDIT_PREFS.putStringSet( "practicas", PRACTICAS );
+            EDIT_PREFS.apply();
+        }
+
+        return;
+    }
+
+    /** Esta fn. era inserta() cuando para insertar un nuevo trabajo se utilizaba un dlg. */
+    private void insertaConDialogo()
     {
         AlertDialog.Builder dlg = new AlertDialog.Builder( this );
         final EditText ED_PRACTICA = new EditText( this );
@@ -186,6 +219,11 @@ public class MainActivity extends AppCompatActivity {
         });
 
         dlg.show();
+    }
+
+    private void inserta()
+    {
+        this.startActivityForResult( new Intent( this, NuevaPractica.class ), RC_NUEVA_PRACTICA );
     }
 
     private void borraNum(int pos)
