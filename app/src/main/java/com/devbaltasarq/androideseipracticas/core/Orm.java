@@ -119,6 +119,7 @@ public class Orm extends SQLiteOpenHelper {
         );
     }
 
+    /** @return un array con todos los objetos de la base de datos. NO RECOMENDADO. */
     public Practica[] recuperaTodo()
     {
         final List<Practica> TORET = new ArrayList<>();
