@@ -9,6 +9,7 @@ import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -19,13 +20,16 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.devbaltasarq.androideseipracticas.R;
+import com.devbaltasarq.androideseipracticas.core.Orm;
 import com.devbaltasarq.androideseipracticas.core.Practica;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -40,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // Inicializa
-        this.practicas = new ArrayList<>();
+        //this.practicas = new ArrayList<>();
 
         // Listeners
         final Button BT_INSERTA = this.findViewById( R.id.btInserta );
@@ -53,8 +57,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        this.adaptador = new PracticaArrayAdapter(
-                this, this.practicas
+        this.adaptador = new SimpleCursorAdapter(
+                this,
+                R.layout.entrada_practica,
+                null,
+                new String[]{ Orm.CAMPO_ASIGNATURA, Orm.CAMPO_TRABAJO },
+                new int[]{ R.id.lblAsignatura, R.id.lblTrabajo }
         );
 
         LV_PRACTICAS.setAdapter( this.adaptador );
@@ -82,6 +90,8 @@ public class MainActivity extends AppCompatActivity {
     {
         super.onResume();
 
+        /*
+        // Ya no se usan las preferencias
         final SharedPreferences PREFS = this.getSharedPreferences( "prefs", MODE_PRIVATE );
         final Set<String> PRACTICAS = PREFS.getStringSet( "practicas", new HashSet<String>() );
 
@@ -101,9 +111,26 @@ public class MainActivity extends AppCompatActivity {
         }
 
         this.adaptador.notifyDataSetChanged();
+        */
+
+
+
+        this.orm = new Orm( this.getApplicationContext() );
+
+        // Esta es la forma incorrecta de hacerlo, aún manteniendo buena parte de la estructura
+        /*
+        this.practicas.clear();
+        this.practicas.addAll( Arrays.asList( this.orm.recuperaTodo() ) );
+        this.adaptador.notifyDataSetChanged();
+         */
+
+        this.adaptador.changeCursor( this.orm.getAllCursor() );
+
         this.muestraEstado();
     }
 
+    /*
+    // No es necesario, pues en cuanto se añade se guarda
     @Override
     public void onPause()
     {
@@ -121,6 +148,7 @@ public class MainActivity extends AppCompatActivity {
         PREFS.putStringSet( "practicas", practicas );
         PREFS.apply();
     }
+    */
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
@@ -179,6 +207,8 @@ public class MainActivity extends AppCompatActivity {
                             data.getExtras().getString( "asignatura" ),
                             data.getExtras().getString( "trabajo" ) );
 
+            /*
+            // Ya no es necesario guardar en preferencias
             final SharedPreferences PREFS = this.getSharedPreferences( "prefs", MODE_PRIVATE );
             final SharedPreferences.Editor EDIT_PREFS = this.getSharedPreferences( "prefs", MODE_PRIVATE ).edit();
             final Set<String> PRACTICAS = PREFS.getStringSet( "practicas", new HashSet<String>() );
@@ -186,12 +216,16 @@ public class MainActivity extends AppCompatActivity {
             PRACTICAS.add( PRACTICA_NUEVA.toString() );
             EDIT_PREFS.putStringSet( "practicas", PRACTICAS );
             EDIT_PREFS.apply();
+            */
+
+            this.orm.guarda( PRACTICA_NUEVA );
         }
 
         return;
     }
 
-    /** Esta fn. era inserta() cuando para insertar un nuevo trabajo se utilizaba un dlg. */
+    /*
+    // Esta fn. era inserta() cuando para insertar un nuevo trabajo se utilizaba un dlg.
     private void insertaConDialogo()
     {
         AlertDialog.Builder dlg = new AlertDialog.Builder( this );
@@ -219,7 +253,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         dlg.show();
-    }
+    }*/
 
     private void inserta()
     {
@@ -228,8 +262,15 @@ public class MainActivity extends AppCompatActivity {
 
     private void borraNum(int pos)
     {
-        this.practicas.remove( pos );
-        this.adaptador.notifyDataSetChanged();
+        // this.practicas.remove( pos );
+        // this.adaptador.notifyDataSetChanged();
+        final Cursor CURSOR = this.adaptador.getCursor();
+
+        CURSOR.moveToPosition( pos );
+        int id = CURSOR.getInt( CURSOR.getColumnIndexOrThrow( Orm.CAMPO_ID ) );
+        this.orm.borra( id );
+        this.adaptador.changeCursor( this.orm.getAllCursor() );
+
         this.muestraEstado();
     }
 
@@ -238,11 +279,12 @@ public class MainActivity extends AppCompatActivity {
         final TextView LBL_PRACTICAS = this.findViewById( R.id.lblPracticas );
 
         LBL_PRACTICAS.setText(
-                Integer.toString( this.practicas.size() )
+                Integer.toString( this.adaptador.getCount() )
                 + " tarea(s)."
         );
     }
 
-    private PracticaArrayAdapter adaptador;
-    private ArrayList<Practica> practicas;
+    private SimpleCursorAdapter adaptador;
+    //private ArrayList<Practica> practicas;
+    private Orm orm;
 }
